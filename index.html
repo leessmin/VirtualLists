@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="./bootstrap-3.4.1-dist/css/bootstrap.min.css">
+</head>
+
+<body>
+
+	<div class="header m-5" style="width: 20vw;margin: 0 auto;">
+		<select class="form-control" id="fileName">
+		</select>
+	</div>
+
+
+	<!-- <ul class="list-group" id="data">
+	</ul> -->
+
+	<table class="table table-bordered" style="margin-top: 10px;" id="data">
+		<thead>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+
+	<script>
+		// 获取文件列表
+		async function getFileName() {
+			const result = await fetch("http://127.0.0.1:8080/fileName").then(r => r.json())
+			if (result.code != 200) {
+				alert(result.msg)
+				return
+			}
+
+			return result.data
+		}
+
+		// 展示 select
+		async function selectShow() {
+			const result = await getFileName()
+			result.forEach(value => {
+				const option = document.createElement("option")
+				option.innerHTML = value
+				option.value = value
+
+				document.querySelector("#fileName").append(option)
+			})
+
+			return result
+		}
+
+
+		// 获取数据
+		async function getData(value) {
+			const result = await fetch(`http://127.0.0.1:8080/get?file=${value}`).then(r => r.json())
+			if (result.code != 200) {
+				alert(result.msg)
+				return
+			}
+
+			return result.data
+		}
+
+		// 初次加载页面
+		window.addEventListener("DOMContentLoaded", async () => {
+			await selectShow()
+			createTable()
+		})
+
+
+		// 创建table
+		async function createTable() {
+			const result = await getData(getSelect())
+
+			// 清空table的数据
+			document.querySelector("#data tbody").innerHTML = ""
+			document.querySelector("#data thead").innerHTML = ""
+
+			createTableHeader(result[0])
+
+			result.forEach(value => {
+				const tr = objFormat(value)
+				document.querySelector("#data tbody").appendChild(tr)
+			});
+		}
+
+		// 生成标头
+		function createTableHeader(obj) {
+			// 生成 表头
+			const tr = document.createElement("tr")
+			for (const key in obj) {
+				const th = document.createElement("th")
+				th.innerHTML = key
+				tr.appendChild(th)
+			}
+
+			document.querySelector("#data thead").append(tr)
+		}
+
+
+		// 将obj里的数据转换成dom
+		function objFormat(obj) {
+			// 创建一个tr标签
+			const tr = document.createElement("tr")
+			for (const key in obj) {
+				// 创建一个p标签
+				const element = document.createElement("td")
+				element.innerHTML = obj[key]
+				tr.append(element)
+			}
+
+			return tr
+		}
+
+		// 获取select选择到的值
+		function getSelect() {
+			return document.querySelectorAll("#fileName option")[document.querySelector("#fileName").selectedIndex].value
+		}
+
+		// 监听 select 的变化
+		document.querySelector("#fileName").addEventListener("change", () => {
+			createTable()
+		})
+	</script>
+</body>
+
+</html>
